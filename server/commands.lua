@@ -69,12 +69,23 @@ lib.addCommand('hack', { help = 'Open the lc_hack example', restricted = 'group.
     end)
 end)
 
--- /hackterminal: creates a test terminal where you stand
+-- /hackterminal: creates a test terminal where you stand, with a screen 1.5 m in front of you
 lib.addCommand('hackterminal', { help = 'Create an lc_hack test terminal at your position', restricted = 'group.admin' }, function(source)
+    local ped = GetPlayerPed(source)
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
+    local rad = math.rad(heading)
+    local forward = vector3(-math.sin(rad), math.cos(rad), 0.0)
+
     api.createTerminal({
         name = 'test',
-        coords = GetEntityCoords(GetPlayerPed(source)),
+        coords = coords,
         label = 'Hack test terminal',
+        screen = {
+            coords = coords + forward * 1.5 + vector3(0.0, 0.0, 0.6),
+            heading = heading, -- Faces you, since you are looking at it
+            width = 1.6,
+        },
         config = example,
         onSuccess = function(player) print(('[lc_hack] %s hacked the test terminal'):format(GetPlayerName(player))) end,
         onFail = function(player) print(('[lc_hack] %s failed the test terminal'):format(GetPlayerName(player))) end,

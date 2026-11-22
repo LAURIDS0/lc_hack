@@ -1,8 +1,10 @@
 -- =====================================================================
 --  lc_hack - terminals in the world
 --  With ox_target: a sphere zone. Without: an ox_lib point with [E].
+--  Terminals with a screen are also handed to screens.lua.
 -- =====================================================================
 
+local screens = require 'client.screens'
 local useTarget = GetResourceState('ox_target') == 'started'
 local zones = {} -- terminal id -> ox_target zone id or lib.points point
 
@@ -11,6 +13,7 @@ local function use(id)
 end
 
 local function remove(id)
+    screens.remove(id)
     local zone = zones[id]
     if not zone then return end
     zones[id] = nil
@@ -24,6 +27,7 @@ end
 
 local function add(t)
     remove(t.id) -- Replace it if it already exists
+    screens.add(t)
     if useTarget then
         zones[t.id] = exports.ox_target:addSphereZone({
             coords = t.coords,
@@ -33,6 +37,7 @@ local function add(t)
                     name = 'lc_hack_' .. t.id,
                     label = t.label,
                     icon = 'fa-solid fa-terminal',
+                    distance = t.radius + 2.5, -- The server accepts up to radius + 3 meters away
                     onSelect = function() use(t.id) end,
                 },
             },
@@ -40,7 +45,7 @@ local function add(t)
     else
         zones[t.id] = lib.points.new({
             coords = t.coords,
-            distance = t.radius,
+            distance = t.radius + 1.0, -- The server accepts up to radius + 3 meters away
             onEnter = function() lib.showTextUI('[E] ' .. t.label, { icon = 'fa-solid fa-terminal' }) end,
             onExit = function() lib.hideTextUI() end,
             nearby = function()

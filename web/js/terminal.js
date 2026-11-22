@@ -25,7 +25,7 @@ let pending = null;    // When set, the terminal is waiting for a password: { la
 const SERVICES = {
     21: 'ftp', 22: 'ssh', 23: 'telnet', 25: 'smtp', 53: 'domain', 80: 'http', 110: 'pop3',
     143: 'imap', 443: 'https', 445: 'microsoft-ds', 3306: 'mysql', 3389: 'ms-wbt-server',
-    5432: 'postgresql', 6379: 'redis', 8080: 'http-proxy', 9100: 'jetdirect',
+    5432: 'postgresql', 5900: 'vnc', 6379: 'redis', 8080: 'http-proxy', 9100: 'jetdirect', 27017: 'mongodb',
 };
 
 // Paths only root can read by default. "~" is the machine user's home directory.
@@ -261,6 +261,27 @@ function readFile(cmd, arg) {
     const node = getNode(resolve(arg));
     if (typeof node === 'string') return node;
     print(isDir(node) ? `${cmd}: ${arg}: Is a directory` : notFound(cmd, arg, node));
+}
+
+// May the current login write here? Like Linux: users write in their own home and /tmp, root everywhere.
+function canWrite(path) {
+    if (session.root) return true;
+    const str = '/' + path.join('/') + '/';
+    return str.startsWith(`/home/${session.user}/`) || str.startsWith('/tmp/');
+}
+
+// Writes (creates or replaces) a file. Returns an error text, or null on success.
+// Used by "echo > file", "touch" and the desktop text editor.
+function writeFile(path, text) {
+    if (!path.length) return 'Is a directory';
+    const parent = getNode(path.slice(0, -1));
+    if (parent === null) return 'Permission denied';
+    if (!isDir(parent)) return 'No such file or directory';
+    const name = path[path.length - 1];
+    if (has(parent, name) && isDir(parent[name])) return 'Is a directory';
+    if (isLocked(path) || !canWrite(path)) return 'Permission denied';
+    parent[name] = String(text);
+    return null;
 }
 
 // What kind of file is it? Used by "file" and the desktop file manager.
@@ -525,6 +546,8 @@ function finish(success) {
     input.disabled = true;
     prompt.textContent = '';
     scrollDown();
+    finished = true; // Nothing to resume after a win or a loss
+    if (currentTerminal !== null) delete saved[currentTerminal];
     setTimeout(() => post('close'), 2000); // Short pause so the player can read it
 }
 
@@ -536,7 +559,7 @@ function finish(success) {
 const commands = {
     // ---------- Help ----------
     help() {
-        print('Files:    ls, la, ll, cd, pwd, cat, head, tail, grep, find, file, wc, strings, base64');
+        print('Files:    ls, la, ll, cd, pwd, cat, head, tail, grep, find, file, wc, strings, base64, touch, echo > file');
         print('System:   whoami, id, hostname, uname, date, ps, crontab, history, echo, clear');
         print('Network:  ifconfig, ip, ping, nmap, arp, netstat, curl, ssh, rdp, ufw');
         print('Access:   su, sudo, startx, exit');
@@ -643,7 +666,20 @@ const commands = {
 
     // ---------- System ----------
 
-    echo(args) { print(args.join(' ')); },
+    // Prints text, or writes it to a file.  echo <text>   echo <text> > file   echo <text> >> file
+    echo(args) {
+        const i = args.findIndex(a => a === '>' || a === '>>');
+        const text = (i < 0 ? args : args.slice(0, i)).join(' ').replace(/^(["'])(.*)\1$/, '$2'); // Strip "quotes"
+        if (i < 0) return print(text);
+
+        const file = args[i + 1];
+        if (!file) return print("bash: syntax error near unexpected token `newline'");
+        const path = resolve(file);
+        const existing = getNode(path);
+        const append = args[i] === '>>' && typeof existing === 'string' && existing !== '';
+        const error = writeFile(path, append ? existing + '\n' + text : text);
+        if (error) print(`bash: ${file}: ${error}`);
+    },
     whoami() { print(session.user); },
     id() {
         print(session.root
@@ -988,14 +1024,24 @@ const commands = {
     },
 
     // Logs out of the top login (root -> user, ssh -> back).
-    // On the player's own machine it closes the terminal (counts as giving up).
+    // On the player's own machine it closes the window, like Escape.
     exit() {
+        if (sessions.length === 1) return post('close');
         const old = sessions.pop();
         session = sessions[sessions.length - 1];
         if (!session) return post('close');
         print('logout');
         if (old.machine !== session.machine) print(`Connection to ${old.machine.host} closed.`);
         if (desk && desk.session === old) closeDesktop(); // Logged out of the desktop's login
+    },
+
+    // Creates an empty file, or does nothing if it exists.  touch <file>
+    touch(args) {
+        if (!args[0]) return print('touch: missing file operand');
+        const node = getNode(resolve(args[0]));
+        if (node !== undefined) return node === null ? print(`touch: cannot touch '${args[0]}': Permission denied`) : undefined;
+        const error = writeFile(resolve(args[0]), '');
+        if (error) print(`touch: cannot touch '${args[0]}': ${error}`);
     },
 };
 commands.logout = commands.exit; // Same command, two names
@@ -1064,11 +1110,66 @@ function complete() {
 }
 
 // =====================================================================
+//  Saved state per terminal
+//  Closing a terminal pauses it: everything is saved here and restored
+//  when the player uses the same terminal again. The server tells us to
+//  forget it (discard) once the player walks too far away.
+// =====================================================================
+const saved = {};             // terminal id -> saved state
+let currentTerminal = null;   // The terminal the open hack came from (null for startHack)
+let finished = false;         // The hack was won or lost, nothing to save
+
+function saveState() {
+    const deskIndex = desk ? sessions.indexOf(desk.session) : -1;
+    saved[currentTerminal] = {
+        machines, target, sessions, history,
+        output: output.innerHTML,
+        desktop: deskIndex >= 0 ? {
+            index: deskIndex,
+            remote: desk.remote,
+            terminalOpen: !!(desk.terminalWin && desk.terminalWin.isConnected),
+        } : null,
+    };
+}
+
+function restoreState(state) {
+    machines = state.machines;
+    target = state.target;
+    sessions = state.sessions;
+    session = sessions[sessions.length - 1];
+    history = state.history;
+    output.innerHTML = state.output;
+    box.style.display = 'block';
+    updatePrompt();
+    if (state.desktop) {
+        openDesktop(sessions[state.desktop.index], state.desktop.remote);
+        if (state.desktop.terminalOpen) openTerminalWindow();
+    }
+    scrollDown();
+}
+
+// =====================================================================
 //  Opening the terminal (called from client/terminal.lua)
 // =====================================================================
 function open(cfg = {}) {
-    // Build every machine: the player's own (top-level config fields) + config.network.
     closeDesktop(); // In case a desktop was left open last time
+    currentTerminal = cfg.terminal ?? null;
+    finished = false;
+    pending = null;
+    input.value = '';
+    input.type = 'text';
+    input.disabled = false;
+
+    // Coming back to a paused terminal: restore it exactly as it was left
+    const state = currentTerminal !== null && cfg.resume ? saved[currentTerminal] : null;
+    if (state) {
+        restoreState(state);
+        historyIndex = history.length;
+        return input.focus();
+    }
+    if (currentTerminal !== null) delete saved[currentTerminal]; // A fresh start replaces anything old
+
+    // Build every machine: the player's own (top-level config fields) + config.network.
     session = null;
     const local = buildMachine({ ip: '10.0.0.20', ...cfg });
     machines = [local, ...toList(cfg.network).filter(d => d && d.ip).map(buildMachine)];
@@ -1081,11 +1182,7 @@ function open(cfg = {}) {
     login(local, local.user);
     history = [];
     historyIndex = 0;
-    pending = null;
     output.innerHTML = '';
-    input.value = '';
-    input.type = 'text';
-    input.disabled = false;
 
     print(`Last login: ${new Date().toDateString()} from 10.0.0.1`);
     print('Type "help" to list commands.');
@@ -1101,9 +1198,11 @@ function open(cfg = {}) {
 window.addEventListener('message', (e) => {
     if (e.data.action === 'open') open(e.data.config);
     if (e.data.action === 'close') {
+        if (currentTerminal !== null && !finished) saveState(); // Paused, not finished
         closeDesktop();
         box.style.display = 'none';
     }
+    if (e.data.action === 'discard') delete saved[e.data.terminal];
 });
 
 // =====================================================================

@@ -3,10 +3,18 @@
 --  A hack running for a player. Configs (and passwords) live here: the
 --  client only gets a copy without passwords, and every password attempt
 --  is checked here. Win and loss are decided here as well.
+--
+--  Hacks started from a terminal are paused when the player closes the
+--  window, and resumed when they use the same terminal again. A paused
+--  hack is discarded (and counts as a failure) once the player walks
+--  further than the terminal's keepDistance away.
 -- =====================================================================
 
 local session = {}
-local sessions = {} -- source -> hack currently running for that player
+local sessions = {} -- source -> the hack that is open right now
+local paused = {}   -- source -> { [terminal id] = paused hack }
+
+local DISCARD_CHECK_INTERVAL = 1000 -- ms between distance checks for paused hacks
 
 -- ---------- Helpers ----------
 
@@ -38,15 +46,34 @@ local function publicMachine(machine, index)
     return copy
 end
 
--- ---------- Start / finish ----------
+---Calls onDone without letting errors in other resources' callbacks break anything.
+local function done(s, success)
+    if not s.onDone then return end
+    local ok, err = pcall(s.onDone, success)
+    if not ok then print(('^1[lc_hack] error in callback: %s^0'):format(err)) end
+end
 
----Starts a hack for a player. onDone(success) is called when it ends.
+-- ---------- Start / pause / finish ----------
+
+---Starts a hack for a player, or resumes the paused hack on the same terminal.
+---onDone(success) is called when it ends.
 ---@param source number
 ---@param config LcHackConfig
 ---@param onDone? fun(success: boolean)
----@return boolean started false if the player is already hacking
-function session.start(source, config, onDone)
+---@param terminal? table The terminal the hack was started from, if any
+---@return boolean started false if the player already has a hack open
+function session.start(source, config, onDone, terminal)
     if sessions[source] then return false end
+
+    -- Resume: the client gets the same config and restores its saved state
+    local resume = terminal and paused[source] and paused[source][terminal.id]
+    if resume then
+        paused[source][terminal.id] = nil
+        sessions[source] = resume
+        resume.public.resume = true
+        TriggerClientEvent('lc_hack:open', source, resume.public)
+        return true
+    end
 
     -- Machine 1 is the player's own, the rest is network (machines without ip are skipped)
     local machines = { config }
@@ -64,35 +91,84 @@ function session.start(source, config, onDone)
     local public = publicMachine(config, 1)
     public.network = {}
     for i = 2, #machines do public.network[i - 1] = publicMachine(machines[i], i) end
+    public.mirror = terminal and terminal.screen and true or nil -- Send the screen to nearby players
+    public.terminal = terminal and terminal.id or nil           -- The client keeps its state per terminal
 
     sessions[source] = {
         machines = machines,
         target = target,
         attempts = config.attempts or 3,
         onDone = onDone,
+        terminal = terminal,
+        public = public,
     }
     TriggerClientEvent('lc_hack:open', source, public)
     return true
 end
 
----Ends the player's hack and calls onDone. Errors in other resources' callbacks must not break anything.
+---Ends the player's open hack and calls onDone.
 ---@param source number
 ---@param success boolean
 function session.finish(source, success)
     local s = sessions[source]
     if not s then return end
     sessions[source] = nil
-    if s.onDone then
-        local ok, err = pcall(s.onDone, success)
-        if not ok then print(('^1[lc_hack] error in callback: %s^0'):format(err)) end
-    end
+    done(s, success)
 end
 
+---Pauses the player's open hack if it came from a terminal, otherwise ends it as a failure.
+---@param source number
+function session.pause(source)
+    local s = sessions[source]
+    if not s then return end
+    if not s.terminal then return session.finish(source, false) end
+
+    sessions[source] = nil
+    paused[source] = paused[source] or {}
+    paused[source][s.terminal.id] = s
+end
+
+---Discards a paused hack (counts as a failure) and tells the client to forget its state.
+---@param source number
+---@param terminalId number
+function session.discard(source, terminalId)
+    local s = paused[source] and paused[source][terminalId]
+    if not s then return end
+    paused[source][terminalId] = nil
+    TriggerClientEvent('lc_hack:discard', source, terminalId)
+    done(s, false)
+end
+
+---Discards every paused hack on a terminal (used when the terminal is removed).
+---@param terminalId number
+function session.discardTerminal(terminalId)
+    for source in pairs(paused) do session.discard(source, terminalId) end
+end
+
+---Is the player's hack open right now? (paused hacks don't count)
 ---@param source number
 ---@return boolean
 function session.exists(source)
     return sessions[source] ~= nil
 end
+
+-- ---------- Discard paused hacks when the player walks away ----------
+
+CreateThread(function()
+    while true do
+        Wait(DISCARD_CHECK_INTERVAL)
+        for source, list in pairs(paused) do
+            local ped = GetPlayerPed(source)
+            for terminalId, s in pairs(list) do
+                local t = s.terminal
+                if ped == 0 or #(GetEntityCoords(ped) - t.coords) > t.keepDistance then
+                    session.discard(source, terminalId)
+                end
+            end
+            if not next(list) then paused[source] = nil end
+        end
+    end
+end)
 
 -- ---------- From the client ----------
 
@@ -130,13 +206,16 @@ lib.callback.register('lc_hack:verify', function(source, data)
     return { ok = false, attempts = s.attempts }
 end)
 
--- The player closed the terminal (Escape / exit) = gave up
+-- The player closed the window (Escape / exit on their own machine)
 RegisterNetEvent('lc_hack:stop', function()
-    session.finish(source, false)
+    session.pause(source)
 end)
 
 AddEventHandler('playerDropped', function()
+    local source = source
     session.finish(source, false)
+    for terminalId in pairs(paused[source] or {}) do session.discard(source, terminalId) end
+    paused[source] = nil
 end)
 
 return session

@@ -62,7 +62,7 @@ function displayPath(path) {
 // Updates the clock in the panel
 function updateClock() {
     if (!desk) return;
-    desk.clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    desk.clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 // =====================================================================
@@ -321,22 +321,62 @@ function fileIcon(name, content) {
     return ICONS.file;
 }
 
-// Text editor: shows a file read-only. path = null opens an empty document.
+// Text editor: opens a file to edit and save. path = null opens a new document,
+// saved to the path typed in the path field (relative paths start in the home directory).
 function openEditor(path) {
+    const s = desk.session;
     const t = THEMES[desk.theme];
-    const body = el('div', 'editor');
-    const text = el('pre', 'editor-text');
-    body.append(text);
+    let content = '';
 
     if (path) {
-        const content = withSession(desk.session, () => getNode(path));
+        const node = withSession(s, () => getNode(path));
         const name = path[path.length - 1];
-        if (content === null) return showError(`You don't have permission to open "${name}".`);
-        if (typeof content !== 'string') return showError(`"${name}" can't be opened.`);
-        // Binary files show up as garbage, like in a real editor
-        text.textContent = content;
-        createWindow(`${name} - ${t.editor}`, body, { width: 540, height: 340 });
-    } else {
-        createWindow(`Untitled - ${t.editor}`, body, { width: 540, height: 340 });
+        if (node === null) return showError(`You don't have permission to open "${name}".`);
+        if (typeof node !== 'string') return showError(`"${name}" can't be opened.`);
+        content = node; // Binary files show up as garbage, like in a real editor
     }
+
+    const body = el('div', 'editor');
+    const toolbar = el('div', 'editor-toolbar');
+    const pathField = el('input', 'editor-path');
+    pathField.spellcheck = false;
+    pathField.value = path ? displayPath(path) : (desk.theme === 'windows' ? 'Desktop\\untitled.txt' : 'Desktop/untitled.txt');
+    const save = el('button', 'editor-save');
+    save.append(icon('fa-solid fa-floppy-disk'), document.createTextNode(' Save'));
+    const status = el('span', 'editor-status');
+    toolbar.append(pathField, save, status);
+    const text = el('textarea', 'editor-text');
+    text.spellcheck = false;
+    text.value = content;
+    body.append(toolbar, text);
+
+    const win = createWindow(`${path ? path[path.length - 1] : 'Untitled'} - ${t.editor}`, body, { width: 560, height: 360 });
+    const title = win.querySelector('.win-title');
+
+    // Turns the path field into a path list. Windows paths (C:\...) work too.
+    const target = () => {
+        let value = pathField.value.trim().replace(/^[a-z]:\\/i, '/').replace(/\\/g, '/');
+        if (!value.startsWith('/') && !value.startsWith('~')) value = '~/' + value;
+        return withSession(s, () => resolve(value));
+    };
+
+    const doSave = () => {
+        const p = target();
+        const error = withSession(s, () => writeFile(p, text.value));
+        if (error) return showError(`Could not save "${p[p.length - 1] || '/'}": ${error}.`);
+        pathField.value = displayPath(p);
+        title.textContent = `${p[p.length - 1]} - ${t.editor}`;
+        status.textContent = 'Saved';
+        setTimeout(() => { status.textContent = ''; }, 1500);
+    };
+
+    save.onclick = doSave;
+    text.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            doSave();
+        }
+    });
+    text.addEventListener('input', () => { status.textContent = 'Unsaved'; });
+    text.focus();
 }

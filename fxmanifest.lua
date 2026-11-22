@@ -6,7 +6,7 @@ game 'gta5'
 -- Resource Information
 name 'lc_hack'
 author 'LC Development'
-version '1.1.0'
+version '1.2.0'
 repository 'https://github.com/LAURIDS0/lc_hack'
 description 'A fake Linux terminal and desktops hacking minigame with networks, firewalls and server-side passwords'
 
@@ -30,6 +30,7 @@ files {
     'client/api.lua',
     'client/terminal.lua',
     'client/zones.lua',
+    'client/screens.lua',
 }
 
 dependency 'ox_lib'

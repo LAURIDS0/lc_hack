@@ -14,6 +14,8 @@ Open [`docs/index.html`](docs/index.html) in your browser.
 - Networks with several machines: `ping`, `nmap`, `ssh`, `rdp`, `curl`, `ifconfig`, `arp`.
 - Firewalls that drop traffic, and machines on several networks the player has to hop through.
 - Graphical desktops (Ubuntu, Windows, Kali, macOS or random) with a terminal window, file manager and text editor.
+- In-world screens (DUI) that show the hack to everyone nearby in real time.
+- A minigame core: other resources register their own minigames and get server-side checks, attempts and time limits.
 - Around 90 default Linux files per machine, including fake passwords to mislead players.
 - Terminals in the world through ox_target, or ox_lib points when ox_target isn't running.
 - Exports built like ox_target, with LuaLS annotations.
