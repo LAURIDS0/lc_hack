@@ -1,0 +1,156 @@
+/* =====================================================================
+   Desktops. Shared layout first, the four themes at the bottom.
+   ===================================================================== */
+
+#desktop {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    font: 13px system-ui, 'Segoe UI', Ubuntu, sans-serif;
+    user-select: none;
+}
+#desktop[hidden] { display: none; }
+
+#desktop button { font-family: inherit; cursor: pointer; }
+
+/* ---------- Panel ---------- */
+.panel {
+    position: absolute; left: 0; right: 0; z-index: 5000;
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 12px; box-sizing: border-box;
+}
+.panel .host { opacity: .8; }
+.panel .clock { margin-left: auto; }
+.panel .power { background: none; border: none; color: inherit; font-size: 14px; padding: 0 4px; }
+
+/* ---------- Dock / taskbar ---------- */
+.dock { position: absolute; z-index: 5001; display: flex; gap: 6px; }
+.dock-item {
+    width: 42px; height: 42px; font-size: 20px;
+    border: none; border-radius: 10px; background: transparent; color: inherit;
+}
+.dock-item:hover { background: rgba(255, 255, 255, .15); }
+
+/* ---------- Desktop icons ---------- */
+.icons {
+    position: absolute; top: 48px; left: 76px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.icon { width: 78px; text-align: center; color: #fff; text-shadow: 0 1px 3px #000; cursor: default; }
+.icon-img { font-size: 32px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .6)); }
+.icon-label { margin-top: 4px; }
+.icon:hover .icon-img { opacity: .85; }
+
+/* ---------- Windows ---------- */
+.window {
+    position: absolute;
+    display: flex; flex-direction: column;
+    border-radius: 8px; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+.titlebar {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px; padding: 0 10px; flex: none;
+    cursor: move;
+}
+.win-title { flex: 1; text-align: center; font-weight: 600; pointer-events: none; }
+.win-close { order: 2; border: none; background: none; color: inherit; font-size: 13px; width: 26px; height: 22px; border-radius: 4px; }
+.win-close:hover { background: #e81123; color: #fff; }
+.win-body { flex: 1; min-height: 0; overflow: auto; }
+
+/* Terminal window: the CLI fills it */
+.terminal-body { overflow: hidden; }
+.terminal-body #term { height: 100%; }
+
+/* ---------- Files ---------- */
+.files { display: flex; flex-direction: column; }
+.files-toolbar { display: flex; align-items: center; gap: 8px; padding: 6px 8px; flex: none; }
+.files-btn { border: none; border-radius: 4px; padding: 3px 8px; }
+.files-path { flex: 1; padding: 4px 8px; border-radius: 4px; font-family: monospace; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.files-hidden { font-size: 12px; white-space: nowrap; }
+.files-list {
+    flex: 1; overflow: auto; padding: 10px;
+    display: grid; grid-template-columns: repeat(auto-fill, 86px); gap: 8px; align-content: start;
+}
+.file { text-align: center; padding: 6px 2px; border-radius: 6px; cursor: default; }
+.file:hover { background: rgba(127, 127, 127, .2); }
+.file-icon { font-size: 30px; color: #8a94a6; }
+.file-icon.folder { color: #f2b544; }
+.file-icon.locked { color: #d9822b; }
+.file-name { word-break: break-all; font-size: 12px; margin-top: 4px; }
+.files-empty { grid-column: 1 / -1; opacity: .6; padding: 20px; text-align: center; }
+
+/* ---------- Text editor ---------- */
+.editor-text { margin: 0; padding: 12px; min-height: 100%; box-sizing: border-box; font: 13px monospace; white-space: pre-wrap; word-break: break-all; user-select: text; }
+
+/* ---------- Error dialog ---------- */
+.dialog { display: flex; align-items: center; gap: 14px; padding: 18px; }
+.dialog-icon { font-size: 28px; color: #e0a800; }
+
+/* =====================================================================
+   Ubuntu (GNOME): black bar at the top, dock on the left, dark windows
+   ===================================================================== */
+.theme-ubuntu { background: linear-gradient(135deg, #2c001e 0%, #77216f 45%, #e95420 100%); color: #fff; }
+.theme-ubuntu .panel { top: 0; height: 28px; background: #000; color: #fff; }
+.theme-ubuntu .panel .menu .fa-ubuntu { color: #e95420; }
+.theme-ubuntu .panel .clock { margin: 0 auto; position: absolute; left: 50%; transform: translateX(-50%); }
+.theme-ubuntu .panel .power { margin-left: auto; }
+.theme-ubuntu .dock { top: 28px; bottom: 0; left: 0; width: 58px; flex-direction: column; align-items: center; padding-top: 8px; background: rgba(0, 0, 0, .55); }
+.theme-ubuntu .window { background: #242424; color: #eee; border: 1px solid #111; }
+.theme-ubuntu .titlebar { background: #303030; }
+.theme-ubuntu .win-close { background: #4a4a4a; border-radius: 50%; width: 22px; }
+.theme-ubuntu .files-toolbar { background: #2b2b2b; }
+.theme-ubuntu .files-btn, .theme-ubuntu .files-path { background: #3a3a3a; color: #eee; }
+
+/* =====================================================================
+   Windows: taskbar at the bottom, start button, light windows
+   ===================================================================== */
+.theme-windows { background: radial-gradient(ellipse at 30% 40%, #3a8ee6 0%, #0b4aa2 55%, #04224f 100%); color: #000; font-family: 'Segoe UI', system-ui, sans-serif; }
+.theme-windows .panel { bottom: 0; height: 40px; background: rgba(32, 32, 32, .9); color: #fff; }
+.theme-windows .panel .menu { font-size: 18px; color: #4cc2ff; }
+.theme-windows .panel .host { order: 3; margin-left: auto; font-size: 12px; }
+.theme-windows .panel .clock { order: 4; margin-left: 0; }
+.theme-windows .panel .power { order: 5; }
+.theme-windows .dock { bottom: 0; left: 44px; height: 40px; align-items: center; gap: 2px; color: #fff; }
+.theme-windows .dock-item { width: 40px; height: 36px; font-size: 16px; border-radius: 4px; }
+.theme-windows .icons { top: 14px; left: 14px; }
+.theme-windows .window { background: #fff; color: #111; border: 1px solid #888; border-radius: 6px; }
+.theme-windows .titlebar { background: #f3f3f3; }
+.theme-windows .win-title { text-align: left; font-weight: 400; }
+.theme-windows .files-toolbar { background: #f9f9f9; border-bottom: 1px solid #ddd; }
+.theme-windows .files-btn, .theme-windows .files-path { background: #fff; border: 1px solid #ccc; }
+
+/* =====================================================================
+   Kali Linux (Xfce): dark bar at the top with apps, blue accents
+   ===================================================================== */
+.theme-kali { background: radial-gradient(ellipse at 70% 60%, #1b2a4a 0%, #0b1020 60%, #05070d 100%); color: #ddd; }
+.theme-kali .panel { top: 0; height: 28px; background: #1e1f29; color: #ddd; border-bottom: 1px solid #367bf0; }
+.theme-kali .panel .menu { color: #367bf0; font-weight: 600; }
+.theme-kali .panel .host { margin-left: 150px; }
+.theme-kali .dock { top: 0; left: 130px; height: 28px; align-items: center; gap: 2px; }
+.theme-kali .dock-item { width: 30px; height: 26px; font-size: 13px; border-radius: 3px; }
+.theme-kali .icons { top: 44px; left: 14px; }
+.theme-kali .window { background: #1a1b26; color: #ddd; border: 1px solid #367bf0; border-radius: 4px; }
+.theme-kali .titlebar { background: #23243a; height: 28px; }
+.theme-kali .win-title { text-align: left; }
+.theme-kali .files-toolbar { background: #23243a; }
+.theme-kali .files-btn, .theme-kali .files-path { background: #2e3048; color: #ddd; }
+
+/* =====================================================================
+   macOS: menu bar at the top, dock at the bottom, traffic lights on the left
+   ===================================================================== */
+.theme-macos { background: linear-gradient(160deg, #0f2027 0%, #2c5364 40%, #b06ab3 80%, #f9a26c 100%); color: #111; font-family: -apple-system, system-ui, 'Helvetica Neue', sans-serif; }
+.theme-macos .panel { top: 0; height: 24px; background: rgba(255, 255, 255, .35); backdrop-filter: blur(12px); color: #111; }
+.theme-macos .panel .menu { font-size: 14px; }
+.theme-macos .dock {
+    bottom: 8px; left: 50%; transform: translateX(-50%);
+    padding: 6px 10px; border-radius: 16px; color: #fff;
+    background: rgba(255, 255, 255, .3); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, .4);
+}
+.theme-macos .dock-item { width: 48px; height: 48px; font-size: 24px; }
+.theme-macos .icons { top: 40px; left: auto; right: 16px; }
+.theme-macos .window { background: #fff; color: #111; border-radius: 10px; }
+.theme-macos .titlebar { background: #ececec; border-bottom: 1px solid #d0d0d0; height: 28px; }
+.theme-macos .win-close { order: 0; width: 12px; height: 12px; padding: 0; border-radius: 50%; background: #ff5f57; box-shadow: 18px 0 0 #febc2e, 36px 0 0 #28c840; margin-right: 40px; }
+.theme-macos .win-close:hover { background: #e0443e; }
+.theme-macos .files-toolbar { background: #f5f5f5; border-bottom: 1px solid #ddd; }
+.theme-macos .files-btn, .theme-macos .files-path { background: #fff; border: 1px solid #d6d6d6; }

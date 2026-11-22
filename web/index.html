@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lc_hack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/desktop.css">
+</head>
+<body>
+    <div id="box">
+        <!-- The CLI. Moved into a terminal window while a desktop is open -->
+        <div id="term">
+            <div id="output"></div>
+            <div id="line">
+                <span id="prompt"></span>
+                <input id="input" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+        <!-- The desktop (Ubuntu, Windows, Kali, macOS) -->
+        <div id="desktop" hidden></div>
+    </div>
+    <script src="js/terminal.js"></script>
+    <script src="js/desktop.js"></script>
+</body>
+</html>
