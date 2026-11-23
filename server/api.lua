@@ -46,6 +46,7 @@
 ---@field keepDistance? number A closed hack is kept until the player is this far away (default 10.0)
 ---@field onSuccess? fun(source: number, id: number | string)
 ---@field onFail? fun(source: number, id: number | string)
+---@field canUse? fun(source: number, id: number | string): boolean, string? Return false (and a message) to stop the player from using the terminal
 
 ---@class LcHackGameOptions
 ---@field secret any The answer, never sent to the client

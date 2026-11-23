@@ -63,6 +63,7 @@ function terminal.create(data)
         config = data.config,
         onSuccess = data.onSuccess,
         onFail = data.onFail,
+        canUse = data.canUse,
         resource = data.resource,
         screen = s and {
             coords = vector3(s.coords.x, s.coords.y, s.coords.z),
@@ -96,6 +97,19 @@ RegisterNetEvent('lc_hack:use', function(id)
 
     local distance = #(GetEntityCoords(GetPlayerPed(source)) - t.coords)
     if distance > t.radius + 3.0 then return end
+
+    -- The resource that made the terminal can say no, e.g. a missing item or a cooldown
+    if t.canUse then
+        local ok, allowed, message = pcall(t.canUse, source, t.name or t.id)
+        if not ok then
+            print(('^1[lc_hack] error in canUse: %s^0'):format(allowed))
+            return
+        end
+        if not allowed then
+            if message then TriggerClientEvent('ox_lib:notify', source, { type = 'error', description = message }) end
+            return
+        end
+    end
 
     local started = session.start(source, t.config, function(success)
         local cb = success and t.onSuccess or t.onFail
