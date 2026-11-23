@@ -11,7 +11,7 @@ let finished = false;         // The hack was won or lost, nothing to save
 function saveState() {
     const deskIndex = desk ? sessions.indexOf(desk.session) : -1;
     saved[currentTerminal] = {
-        machines, target, sessions, history,
+        machines, target, sessions, history, serverCommands,
         output: output.innerHTML,
         desktop: deskIndex >= 0 ? {
             index: deskIndex,
@@ -24,6 +24,7 @@ function saveState() {
 function restoreState(state) {
     machines = state.machines;
     target = state.target;
+    serverCommands = state.serverCommands || [];
     sessions = state.sessions;
     session = sessions[sessions.length - 1];
     history = state.history;

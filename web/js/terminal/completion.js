@@ -17,7 +17,7 @@ function complete() {
 
     if (words.length === 0) {
         // First word: match commands
-        options = Object.keys(commands).filter(c => c.startsWith(word)).map(c => c + ' ');
+        options = [...Object.keys(commands), ...serverCommands].filter(c => c.startsWith(word)).map(c => c + ' ');
     } else {
         // Otherwise: match files in the directory the word points to, e.g. "Doc" or "/etc/pa"
         const slash = word.lastIndexOf('/');

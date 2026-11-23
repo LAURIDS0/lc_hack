@@ -10,6 +10,9 @@
 //  and open http://localhost:8000/web/
 //    ?desktop=macos|kali|ubuntu|chromeos|mint|fedora|random  the player's desktop
 //    ?desktop=none                                           the plain terminal
+//    ?hack=../myresource/hacks/office.lua   your own hack instead of /hack: a Lua file
+//      with "return { ... }" (or "local name = { ... }"), relative to the lc_hack folder.
+//      Serve your resources folder to reach other resources.
 //  Changes on the always-on servers are kept in this browser (localStorage).
 // =====================================================================
 
@@ -175,7 +178,7 @@ if (typeof GetParentResourceName !== 'function' && !MIRROR) {
     let s = null;
     const start = (example, config) => {
         const machines = [example, ...toList(example.network).filter(m => m.ip), ...config.servers];
-        const target = machines.find(m => example.target && hasIp(m, example.target)) || machines[0];
+        const target = example.target === false ? null : machines.find(m => example.target && hasIp(m, example.target)) || machines[0];
         const pub = publicMachine(example, 1);
         pub.network = machines.slice(1).map((m, i) => publicMachine(m, i + 2));
         pub.dns = config.dns;
@@ -202,12 +205,16 @@ if (typeof GetParentResourceName !== 'function' && !MIRROR) {
     // ---------- Start: read the Lua files, then answer the NUI like client/terminal.lua ----------
 
     (async () => {
-        const commandsLua = await readText('../server/commands.lua');
-        if (!commandsLua) {
-            return console.error('[lc_hack] Browser test mode: run the web server in the resource folder and open /web/');
+        const params = new URLSearchParams(location.search);
+        const file = '../' + (params.get('hack') || 'server/commands.lua');
+        const lua = await readText(file);
+        if (!lua) {
+            return console.error(`[lc_hack] Browser test mode: ${file} not found. Run the web server in the resource folder and open /web/`);
         }
-        const example = parseLua(commandsLua, commandsLua.search(/^local example = /m) + 'local example = '.length);
-        const desktop = new URLSearchParams(location.search).get('desktop');
+        // The hack is the first "return {" or "local name = {" at the start of a line
+        const at = lua.search(/^return\s*\{/m) >= 0 ? lua.search(/^return\s*\{/m) : lua.search(/^local \w+\s*=\s*\{/m);
+        const example = parseLua(lua, lua.indexOf('{', at));
+        const desktop = params.get('desktop');
         if (desktop) example.desktop = desktop === 'none' ? undefined : desktop;
         const config = await loadConfig();
 

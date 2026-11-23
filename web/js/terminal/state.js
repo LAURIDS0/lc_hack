@@ -19,6 +19,7 @@ let sessions = [];     // Login stack: ssh and su push a login, exit pops it
 let session = null;    // The top login = where the player "is" right now
 let history = [];      // Every command typed (for arrow keys and "history")
 let historyIndex = 0;  // Position in history while pressing up/down
+let serverCommands = []; // Commands from config.commands: they run on the server
 let dns = {};          // name -> IP for the always-on servers (config.lua on the server)
 let pending = null;    // When set, the terminal is waiting for a password: { label, onValue }
 

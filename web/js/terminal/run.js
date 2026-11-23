@@ -4,8 +4,18 @@
 
 // Runs a command from a list of words: the first word is the command, the rest are arguments.
 function runCommand([name, ...args]) {
-    if (commands[name]) commands[name](args);
+    if (serverCommands.includes(name)) runServerCommand(name, args);
+    else if (has(commands, name)) commands[name](args);
     else print(`${name}: command not found`);
+}
+
+// A command from config.commands: the server runs it and sends back the lines to print
+function runServerCommand(name, args) {
+    input.disabled = true;
+    fetch(`https://${GetParentResourceName()}/command`, { method: 'POST', body: JSON.stringify({ name, args }) })
+        .then(res => res.json())
+        .then(lines => printSlow(toList(lines), 40))
+        .catch(() => printSlow([`${name}: connection to the server failed`], 0));
 }
 
 // Runs a full line typed by the player.

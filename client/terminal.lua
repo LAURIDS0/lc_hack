@@ -45,6 +45,16 @@ RegisterNetEvent('lc_hack:serverFiles', function(ip, ops)
     SendNUIMessage({ action = 'serverFiles', ip = ip, ops = ops })
 end)
 
+-- A command from config.commands: it runs on the server, the lines go back to the NUI
+RegisterNUICallback('command', function(data, cb)
+    cb(lib.callback.await('lc_hack:command', false, data.name, data.args) or {})
+end)
+
+-- The server added a machine to the running hack (addMachine)
+RegisterNetEvent('lc_hack:addMachine', function(machine)
+    SendNUIMessage({ action = 'addMachine', machine = machine })
+end)
+
 -- The server closes the terminal (stopHack)
 RegisterNetEvent('lc_hack:close', hide)
 

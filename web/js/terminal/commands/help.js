@@ -12,6 +12,7 @@ Object.assign(commands, {
         print('System:   whoami, id, hostname, uname, date, ps, crontab, history, echo, clear');
         print('Network:  ifconfig, ip, ping, nmap, arp, netstat, curl, ssh, rdp, ufw');
         print('Access:   su, sudo, startx, exit');
-        print(`Goal: get root access on ${target.host}.`);
+        if (serverCommands.length) print(`Tools:    ${serverCommands.join(', ')}`);
+        if (target) print(`Goal: get root access on ${target.host}.`);
     },
 });

@@ -5,6 +5,7 @@ function open(cfg = {}) {
     closeDesktop(); // In case a desktop was left open last time
     currentTerminal = cfg.terminal ?? null;
     dns = cfg.dns || {};
+    serverCommands = toList(cfg.serverCommands);
     finished = false;
     pending = null;
     input.value = '';
@@ -26,7 +27,8 @@ function open(cfg = {}) {
     machines = [local, ...toList(cfg.network).filter(d => d && d.ip).map(buildMachine)];
 
     // The target is the machine with the IP in config.target, otherwise the player's own.
-    target = (cfg.target && findMachine(cfg.target)) || local;
+    // target = false: no target, the hack ends when the player closes it.
+    target = cfg.target === false ? null : (cfg.target && findMachine(cfg.target)) || local;
 
     // Reset everything from last time
     sessions = [];
@@ -55,4 +57,5 @@ window.addEventListener('message', (e) => {
     }
     if (e.data.action === 'discard') delete saved[e.data.terminal];
     if (e.data.action === 'serverFiles') applyServerFiles(e.data.ip, e.data.ops);
+    if (e.data.action === 'addMachine') machines.push(buildMachine(e.data.machine));
 });

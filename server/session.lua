@@ -40,8 +40,10 @@ end
 ---@return table
 local function publicMachine(machine, index)
     local copy = {}
-    for k, v in pairs(machine) do copy[k] = v end
-    copy.password, copy.rootPassword, copy.network = nil, nil, nil
+    for k, v in pairs(machine) do
+        if type(v) ~= 'function' then copy[k] = v end -- onRoot etc. stay on the server
+    end
+    copy.password, copy.rootPassword, copy.network, copy.commands = nil, nil, nil, nil
     copy.hasPassword = machine.password ~= nil
     copy.hasRootPassword = machine.rootPassword ~= nil
     copy.index = index
@@ -53,6 +55,16 @@ local function done(s, success)
     if not s.onDone then return end
     local ok, err = pcall(s.onDone, success)
     if not ok then print(('^1[lc_hack] error in callback: %s^0'):format(err)) end
+end
+
+---Calls a function from another resource; an error there is printed, never thrown.
+local function safeCall(fn, ...)
+    local result = table.pack(pcall(fn, ...))
+    if not result[1] then
+        print(('^1[lc_hack] error in callback: %s^0'):format(result[2]))
+        return nil
+    end
+    return table.unpack(result, 2, result.n)
 end
 
 -- ---------- Start / pause / finish ----------
@@ -85,8 +97,9 @@ function session.start(source, config, onDone, terminal)
     -- The always-on servers from config.lua are part of every hack
     for _, m in ipairs(servers.list) do machines[#machines + 1] = m end
 
-    -- The target is the machine with the IP in config.target, otherwise the player's own
-    local target = machines[1]
+    -- The target is the machine with the IP in config.target, otherwise the player's own.
+    -- target = false: no target, the hack only ends when the player closes it.
+    local target = config.target ~= false and machines[1] or nil
     for _, m in ipairs(machines) do
         if config.target and hasIp(m, config.target) then target = m end
     end
@@ -96,6 +109,11 @@ function session.start(source, config, onDone, terminal)
     public.network = {}
     for i = 2, #machines do public.network[i - 1] = publicMachine(machines[i], i) end
     public.dns = servers.dns
+    -- Commands from config.commands run on the server; the client only learns their names
+    public.serverCommands = {}
+    for name, fn in pairs(config.commands or {}) do
+        if type(name) == 'string' and type(fn) == 'function' then public.serverCommands[#public.serverCommands + 1] = name end
+    end
     public.mirror = terminal and terminal.screen and true or nil -- Send the screen to nearby players
     public.terminal = terminal and terminal.id or nil           -- The client keeps its state per terminal
 
@@ -107,6 +125,7 @@ function session.start(source, config, onDone, terminal)
         terminal = terminal,
         public = public,
         logins = {}, -- machine index -> { root = boolean }: where the player has logged in
+        commands = config.commands or {},
     }
     TriggerClientEvent('lc_hack:open', source, public)
     return true
@@ -201,7 +220,11 @@ lib.callback.register('lc_hack:verify', function(source, data)
 
     if ok then
         s.logins[index] = s.logins[index] or { root = false }
-        if data.kind == 'root' then s.logins[index].root = true end
+        if data.kind == 'root' then
+            s.logins[index].root = true
+            if type(m.onRoot) == 'function' then safeCall(m.onRoot, source, m) end
+            if sessions[source] ~= s then return { ok = false, lost = true } end -- onRoot stopped the hack
+        end
 
         -- Root on the target machine = win
         if data.kind == 'root' and m == s.target then
@@ -217,6 +240,36 @@ lib.callback.register('lc_hack:verify', function(source, data)
         return { ok = false, lost = true }
     end
     return { ok = false, attempts = s.attempts }
+end)
+
+---Adds a machine to the player's running hack, e.g. a device found with a command.
+---@param source number
+---@param machine LcHackMachine
+---@return boolean added false if the player isn't hacking
+function session.addMachine(source, machine)
+    local s = sessions[source]
+    if not s then return false end
+    local index = #s.machines + 1
+    s.machines[index] = machine
+    local public = publicMachine(machine, index)
+    s.public.network[#s.public.network + 1] = public -- So a resumed terminal has it too
+    TriggerClientEvent('lc_hack:addMachine', source, public)
+    return true
+end
+
+-- Runs a command from config.commands for the player. Returns the lines to print.
+lib.callback.register('lc_hack:command', function(source, name, args)
+    local s = sessions[source]
+    local fn = s and type(name) == 'string' and s.commands[name]
+    if type(fn) ~= 'function' or type(args) ~= 'table' or #args > 20 then return {} end
+    local clean = {}
+    for i, arg in ipairs(args) do clean[i] = tostring(arg):sub(1, 200) end
+    local lines = safeCall(fn, source, clean)
+    if type(lines) == 'string' then return { lines } end
+    if type(lines) ~= 'table' then return {} end
+    local out = {}
+    for i, line in ipairs(lines) do out[i] = tostring(line) end
+    return out
 end)
 
 -- The player changed files on an always-on server (config.lua): save them for everyone.

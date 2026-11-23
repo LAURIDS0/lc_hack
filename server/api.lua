@@ -21,11 +21,13 @@
 ---@field files? table<string, string>
 ---@field locked? string[]
 ---@field website? string | true Only for servers in config.lua: folder with a static website, or true for an empty one to build in game
+---@field onRoot? fun(source: number, machine: LcHackMachine) Called on the server when the player gets root on this machine
 
 ---@class LcHackConfig : LcHackMachine
----@field target? string The IP the player needs root on
+---@field target? string | false The IP the player needs root on. false = no target, the hack ends when the player closes it
 ---@field attempts? number
 ---@field network? LcHackMachine[]
+---@field commands? table<string, fun(source: number, args: string[]): string[] | string | nil> Extra terminal commands that run on the server
 
 ---@class LcHackScreen
 ---@field coords vector3 Center of the screen
@@ -74,6 +76,7 @@ end
 local function checkConfig(config)
     if type(config) ~= 'table' then typeError('config', 'table', type(config)) end
     if config.network ~= nil and type(config.network) ~= 'table' then typeError('config.network', 'table', type(config.network)) end
+    if config.commands ~= nil and type(config.commands) ~= 'table' then typeError('config.commands', 'table', type(config.commands)) end
 end
 
 ---Creates a terminal in the world. Using the same `name` again replaces the old one.
@@ -133,6 +136,17 @@ function api.stopHack(source)
     if not session.exists(source) then return end
     session.finish(source, false)
     TriggerClientEvent('lc_hack:close', source)
+end
+
+---Adds a machine to the player's running hack. Passwords stay on the server, like in a HackConfig.
+---@param source number
+---@param machine LcHackMachine
+---@return boolean added false if the player isn't hacking
+function api.addMachine(source, machine)
+    if type(source) ~= 'number' then typeError('source', 'number', type(source)) end
+    if type(machine) ~= 'table' then typeError('machine', 'table', type(machine)) end
+    if machine.ip == nil then typeError('machine.ip', 'string', 'nil') end
+    return session.addMachine(source, machine)
 end
 
 ---@param source number
