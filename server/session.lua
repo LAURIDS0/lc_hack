@@ -20,6 +20,14 @@ local DISCARD_CHECK_INTERVAL = 1000 -- ms between distance checks for paused hac
 
 -- ---------- Helpers ----------
 
+---Is it a function? Functions from other resources arrive through exports as function
+---references: tables you can call, so type() says 'table'. rawget, because indexing one throws.
+---@param v any
+---@return boolean
+local function isFunction(v)
+    return type(v) == 'function' or type(v) == 'table' and rawget(v, '__cfx_functionReference') ~= nil
+end
+
 ---Does the machine have this IP? (ip can be a string or a list)
 ---@param machine LcHackMachine
 ---@param ip string
@@ -41,7 +49,7 @@ end
 local function publicMachine(machine, index)
     local copy = {}
     for k, v in pairs(machine) do
-        if type(v) ~= 'function' then copy[k] = v end -- onRoot etc. stay on the server
+        if not isFunction(v) then copy[k] = v end -- onRoot etc. stay on the server
     end
     copy.password, copy.rootPassword, copy.network, copy.commands = nil, nil, nil, nil
     copy.hasPassword = machine.password ~= nil
@@ -112,7 +120,7 @@ function session.start(source, config, onDone, terminal)
     -- Commands from config.commands run on the server; the client only learns their names
     public.serverCommands = {}
     for name, fn in pairs(config.commands or {}) do
-        if type(name) == 'string' and type(fn) == 'function' then public.serverCommands[#public.serverCommands + 1] = name end
+        if type(name) == 'string' and isFunction(fn) then public.serverCommands[#public.serverCommands + 1] = name end
     end
     public.mirror = terminal and terminal.screen and true or nil -- Send the screen to nearby players
     public.terminal = terminal and terminal.id or nil           -- The client keeps its state per terminal
@@ -222,7 +230,7 @@ lib.callback.register('lc_hack:verify', function(source, data)
         s.logins[index] = s.logins[index] or { root = false }
         if data.kind == 'root' then
             s.logins[index].root = true
-            if type(m.onRoot) == 'function' then safeCall(m.onRoot, source, m) end
+            if isFunction(m.onRoot) then safeCall(m.onRoot, source, m) end
             if sessions[source] ~= s then return { ok = false, lost = true } end -- onRoot stopped the hack
         end
 
@@ -261,7 +269,7 @@ end
 lib.callback.register('lc_hack:command', function(source, name, args)
     local s = sessions[source]
     local fn = s and type(name) == 'string' and s.commands[name]
-    if type(fn) ~= 'function' or type(args) ~= 'table' or #args > 20 then return {} end
+    if not isFunction(fn) or type(args) ~= 'table' or #args > 20 then return {} end
     local clean = {}
     for i, arg in ipairs(args) do clean[i] = tostring(arg):sub(1, 200) end
     local lines = safeCall(fn, source, clean)
