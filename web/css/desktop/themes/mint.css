@@ -29,7 +29,7 @@
 .theme-mint .win-close:hover { background: #8fa876; }
 
 /* Terminal: black with green user and blue path */
-#term[data-os="mint"] {
+.term[data-os="mint"] {
     --term-bg: #1d1f21;  --term-fg: #e6e6e6;  --term-font: 14px 'DejaVu Sans Mono', monospace;
     --prompt: #e6e6e6;  --prompt-user: #8ae234;  --prompt-path: #729fcf;  --prompt-weight: bold;
 }

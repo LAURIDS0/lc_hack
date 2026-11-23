@@ -42,7 +42,7 @@
 .theme-chromeos .browser-address { background: #f1f3f4; border-color: transparent; }
 
 /* Terminal: Linux on ChromeOS, dark with green and blue */
-#term[data-os="chromeos"] {
+.term[data-os="chromeos"] {
     --term-bg: #202124;  --term-fg: #e8eaed;  --term-font: 13px 'Cousine', 'Noto Sans Mono', monospace;
     --prompt: #e8eaed;  --prompt-user: #81c995;  --prompt-path: #8ab4f8;  --prompt-weight: bold;
 }

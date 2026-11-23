@@ -13,6 +13,7 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
 - Realistic terminal with `ls`, `cd`, `cat`, `grep -r`, `find`, `tree`, `cp`, `sort`, `ps`, `strings`, `base64`, tab completion and history.
 - Networks with several machines: `ping`, `nmap`, `ssh`, `rdp`, `curl`, `ifconfig`, `arp`.
 - Firewalls that drop traffic, and machines on several networks the player has to hop through.
+- Several terminals at once, and live camera windows (`view <ip>`) for camera machines.
 - Graphical desktops (Ubuntu, Kali, macOS, ChromeOS, Linux Mint, Fedora or random) with a terminal, file manager, text editor, image viewer, web browser and system monitor that look like each OS. Files in `~/Desktop` show up on the desktop.
 - Always-on servers and DNS in `config.lua`, with static websites players can browse and build in game.
 - In-world screens (DUI) that show the hack to everyone nearby in real time.

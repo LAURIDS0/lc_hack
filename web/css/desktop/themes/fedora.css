@@ -35,7 +35,7 @@
 .theme-fedora .place.active { font-weight: 600; }
 
 /* Terminal: Ptyxis dark, plain [user@host dir]$ prompt */
-#term[data-os="fedora"] {
+.term[data-os="fedora"] {
     --term-bg: #1e1e1e;  --term-fg: #f6f5f4;  --term-font: 14px 'Source Code Pro', 'DejaVu Sans Mono', monospace;
     --prompt: #f6f5f4;
 }

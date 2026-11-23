@@ -17,13 +17,14 @@ function askPassword(label, needPrompt, onValue) {
 //   kind = 'login' (ssh/rdp) or 'root' (su/sudo)
 //   onSuccess runs on a correct password, fail is the text shown on a wrong one.
 function verify(machine, kind, user, value, onSuccess, fail) {
+    const t = activeTerm; // The answer goes to this terminal
     input.disabled = true; // No typing while the server answers
     fetch(`https://${GetParentResourceName()}/verify`, {
         method: 'POST',
         body: JSON.stringify({ machine: machine.index, kind, user, value }),
     })
         .then(res => res.json())
-        .then(res => {
+        .then(res => inTerm(t, () => {
             input.disabled = false;
             if (res.win) return finish(true);   // Root on the target machine
             if (res.ok) {
@@ -38,12 +39,12 @@ function verify(machine, kind, user, value, onSuccess, fail) {
                 input.focus();
             }
             scrollDown();
-        })
-        .catch(() => {
+        }))
+        .catch(() => inTerm(t, () => {
             input.disabled = false;
             print('Connection to the server failed.');
             updatePrompt();
-        });
+        }));
 }
 
 // Shows the result and closes the terminal. The server has already decided it.

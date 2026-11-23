@@ -5,6 +5,9 @@
 // Remote desktop (rdp) connects over VNC
 const VNC_PORT = 5900;
 
+// Cameras stream video over RTSP
+const CAMERA_PORT = 554;
+
 // Running processes on a machine, for "ps aux" and the System Monitor app.
 // own = the logged in user's own processes, e.g. ['-bash', 'ps aux']
 function processList(m, user, own) {
@@ -34,11 +37,13 @@ function buildMachine(cfg) {
         : desktops.includes(cfg.desktop) ? cfg.desktop : null;
 
     // Without ports in config: ssh, plus remote desktop if the machine has one
-    const defaultPorts = desktop ? [22, VNC_PORT] : [22];
+    // A camera streams video (RTSP, 554) and has a web page (80)
+    const defaultPorts = cfg.camera ? [80, CAMERA_PORT] : desktop ? [22, VNC_PORT] : [22];
 
     const m = {
         desktop,
         processes: toList(cfg.processes),                     // Extra processes for "ps aux"
+        camera: cfg.camera || null,                           // { coords, rotation, fov }: a camera in the world (view)
         ips: toList(cfg.ip),                                  // A machine can have several IPs (several networks)
         host: cfg.host || 'pc',
         user: cfg.user || 'user',

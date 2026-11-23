@@ -28,7 +28,13 @@ Object.assign(commands, {
     // Logs out of the top login (root -> user, ssh -> back).
     // On the player's own machine it closes the window, like Escape.
     exit() {
-        if (sessions.length === 1) return post('close');
+        // The last login: an extra terminal closes, the main one ends the hack
+        if (sessions.length === 1) {
+            if (activeTerm.main) return post('close');
+            const t = activeTerm;
+            if (t.win) t.win.remove();
+            return closeTerm(t);
+        }
         const old = sessions.pop();
         session = sessions[sessions.length - 1];
         if (!session) return post('close');

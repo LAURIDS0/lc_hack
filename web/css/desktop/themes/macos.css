@@ -77,7 +77,7 @@
 .theme-macos .browser-address { text-align: center; background: #ececec; border-color: transparent; }
 
 /* Terminal: the Basic profile, black on white */
-#term[data-os="macos"] {
+.term[data-os="macos"] {
     --term-bg: #fff;  --term-fg: #000;  --term-font: 13px 'SF Mono', Menlo, Monaco, monospace;
     --prompt: #000;  --term-caret: #777;
 }

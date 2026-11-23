@@ -19,11 +19,11 @@
 <body>
     <div id="box">
         <!-- The CLI. Moved into a terminal window while a desktop is open -->
-        <div id="term">
-            <div id="output"></div>
-            <div id="line">
-                <span id="prompt"></span>
-                <input id="input" autocomplete="off" spellcheck="false">
+        <div id="term" class="term">
+            <div id="output" class="output"></div>
+            <div id="line" class="line">
+                <span id="prompt" class="prompt"></span>
+                <input id="input" class="input" autocomplete="off" spellcheck="false">
             </div>
         </div>
         <!-- The desktop (Ubuntu, Kali, macOS, ChromeOS, Mint, Fedora) -->
@@ -31,6 +31,7 @@
     </div>
     <!-- Terminal: order matters, later files use earlier ones -->
     <script src="js/terminal/state.js"></script>
+    <script src="js/terminal/instances.js"></script>
     <script src="js/terminal/os.js"></script>
     <script src="js/terminal/default-files.js"></script>
     <script src="js/terminal/helpers.js"></script>
@@ -46,6 +47,7 @@
     <script src="js/terminal/commands/network.js"></script>
     <script src="js/terminal/commands/tools.js"></script>
     <script src="js/terminal/commands/desktop.js"></script>
+    <script src="js/terminal/commands/cameras.js"></script>
     <script src="js/terminal/commands/access.js"></script>
     <script src="js/terminal/run.js"></script>
     <script src="js/terminal/completion.js"></script>
@@ -63,6 +65,7 @@
     <script src="js/desktop/apps/editor.js"></script>
     <script src="js/desktop/apps/viewer.js"></script>
     <script src="js/desktop/apps/monitor.js"></script>
+    <script src="js/desktop/apps/cameras.js"></script>
     <script src="js/mirror.js"></script>
     <script src="js/dev.js"></script>
 </body>

@@ -7,10 +7,11 @@
 
 // ---------- Elements from index.html ----------
 const box = document.getElementById('box');       // The whole window (80% of the screen)
-const term = document.getElementById('term');     // The CLI (output + input line)
-const output = document.getElementById('output'); // All printed text goes here
-const prompt = document.getElementById('prompt'); // "user@host:~$ " in front of the input
-const input = document.getElementById('input');   // The input field
+// The active terminal's elements (see instances.js; the main terminal starts active)
+let term = document.getElementById('term');     // The CLI (output + input line)
+let output = document.getElementById('output'); // All printed text goes here
+let prompt = document.getElementById('prompt'); // "user@host:~$ " in front of the input
+let input = document.getElementById('input');   // The input field
 
 // ---------- State ----------
 let machines = [];     // All machines: the player's own (first) + config.network
@@ -27,7 +28,7 @@ let pending = null;    // When set, the terminal is waiting for a password: { la
 const SERVICES = {
     21: 'ftp', 22: 'ssh', 23: 'telnet', 25: 'smtp', 53: 'domain', 80: 'http', 110: 'pop3',
     143: 'imap', 443: 'https', 445: 'microsoft-ds', 3306: 'mysql', 3389: 'ms-wbt-server',
-    5432: 'postgresql', 5900: 'vnc', 6379: 'redis', 8080: 'http-proxy', 9100: 'jetdirect', 27017: 'mongodb',
+    554: 'rtsp', 5432: 'postgresql', 5900: 'vnc', 6379: 'redis', 8080: 'http-proxy', 9100: 'jetdirect', 27017: 'mongodb',
 };
 
 // Paths only root can read by default. "~" is the machine user's home directory.

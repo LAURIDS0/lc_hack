@@ -109,6 +109,9 @@ function openDesktop(s, remote) {
 // Closes the desktop and puts the CLI back in the whole box.
 function closeDesktop() {
     if (!desk) return;
+    useTerm(mainTerm);
+    closeExtraTerms();
+    closeCameras();
     clearInterval(desk.timer);
     box.prepend(term);         // Move the CLI out of the terminal window again
     term.hidden = false;

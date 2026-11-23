@@ -20,7 +20,7 @@
 .theme-ubuntu .win-close:hover { background: #e95420; }
 
 /* Terminal: Ubuntu purple, green user, blue path */
-#term[data-os="ubuntu"] {
+.term[data-os="ubuntu"] {
     --term-bg: #300a24;  --term-fg: #fff;  --term-font: 14px 'Ubuntu Mono', 'DejaVu Sans Mono', monospace;
     --prompt: #fff;  --prompt-user: #8ae234;  --prompt-path: #729fcf;  --prompt-weight: bold;
 }

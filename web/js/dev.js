@@ -218,6 +218,7 @@ if (typeof GetParentResourceName !== 'function' && !MIRROR) {
         if (desktop) example.desktop = desktop === 'none' ? undefined : desktop;
         const config = await loadConfig();
 
+        let liveFeed = null;
         window.GetParentResourceName = () => 'lc_hack';
         window.fetch = (url, opts) => {
             const name = String(url).match(/^https:\/\/lc_hack\/(\w+)$/)?.[1];
@@ -225,6 +226,16 @@ if (typeof GetParentResourceName !== 'function' && !MIRROR) {
             const data = JSON.parse(opts?.body || '{}');
             let res = 'ok';
             if (name === 'verify') res = verify(data);
+            // Cameras: the page's background plays the game's camera, with a picture per camera
+            if (name === 'cameraView') {
+                // The test mode puts the camera's picture right in the window, like the fitted game camera does
+                liveFeed = imageSrc(`camera ${JSON.stringify(data.coords)}`, '');
+                const r = data.rect;
+                document.body.style.background = `#000 url("${liveFeed}") ${r.x}px ${r.y}px / ${r.w}px ${r.h}px no-repeat`;
+                res = true;
+            }
+            if (name === 'cameraOff') { document.body.style.background = ''; liveFeed = null; res = true; }
+            if (name === 'cameraSnapshot') res = liveFeed || false;
             if (name === 'serverFiles' && s) {
                 const m = s.machines[Number(data.machine) - 1];
                 if (m && m.internet) serverFiles(m, data.ops);

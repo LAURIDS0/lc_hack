@@ -11,11 +11,12 @@ function runCommand([name, ...args]) {
 
 // A command from config.commands: the server runs it and sends back the lines to print
 function runServerCommand(name, args) {
+    const t = activeTerm;
     input.disabled = true;
     fetch(`https://${GetParentResourceName()}/command`, { method: 'POST', body: JSON.stringify({ name, args }) })
         .then(res => res.json())
-        .then(lines => printSlow(toList(lines), 40))
-        .catch(() => printSlow([`${name}: connection to the server failed`], 0));
+        .then(lines => inTerm(t, () => printSlow(toList(lines), 40)))
+        .catch(() => inTerm(t, () => printSlow([`${name}: connection to the server failed`], 0)));
 }
 
 // Runs a full line typed by the player.

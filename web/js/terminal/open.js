@@ -2,6 +2,8 @@
 //  Opening the terminal (called from client/terminal.lua)
 // =====================================================================
 function open(cfg = {}) {
+    useTerm(mainTerm);
+    closeExtraTerms();
     closeDesktop(); // In case a desktop was left open last time
     currentTerminal = cfg.terminal ?? null;
     dns = cfg.dns || {};
@@ -51,6 +53,7 @@ function open(cfg = {}) {
 window.addEventListener('message', (e) => {
     if (e.data.action === 'open') open(e.data.config);
     if (e.data.action === 'close') {
+        useTerm(mainTerm);
         if (currentTerminal !== null && !finished) saveState(); // Paused, not finished
         closeDesktop();
         box.style.display = 'none';

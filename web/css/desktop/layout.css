@@ -91,4 +91,4 @@
 
 /* Terminal window: the CLI fills it */
 .terminal-body { overflow: hidden; }
-.terminal-body #term { height: 100%; }
+.terminal-body .term { height: 100%; }

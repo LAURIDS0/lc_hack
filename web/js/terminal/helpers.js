@@ -32,20 +32,22 @@ function print(text) {
 // Prints lines one at a time with a delay (ping, nmap etc.).
 // null in the list means "wait without printing". Input is disabled meanwhile.
 function printSlow(lines, delay, done) {
+    const t = activeTerm; // Keeps printing in this terminal, even if another one is used meanwhile
     input.disabled = true;
     let i = 0;
-    const next = () => {
+    const next = () => inTerm(t, () => {
         if (i < lines.length) {
             const line = lines[i++];
             if (line !== null) print(line);
             scrollDown();
-            return setTimeout(next, delay);
+            setTimeout(next, delay);
+            return;
         }
         input.disabled = false;
-        input.focus();
+        if (activeTerm === t) input.focus();
         updatePrompt();
         if (done) done();
-    };
+    });
     next();
 }
 

@@ -32,7 +32,7 @@ function mirrorSnapshot() {
         else if (field.type === 'checkbox') field.checked ? copy.setAttribute('checked', '') : copy.removeAttribute('checked');
         else copy.setAttribute('value', field.value);
     });
-    const out = clone.querySelector('#output');
+    const out = clone.querySelector('.output');
     while (out.children.length > MIRROR_LINES) out.firstElementChild.remove();
     return clone.innerHTML;
 }
@@ -126,7 +126,7 @@ function showMirror(state) {
     box.style.cssText = `width: ${width}px; height: ${height}px; transform: scale(${scale}); ` +
         `left: ${(window.innerWidth - width * scale) / 2}px; top: ${(window.innerHeight - height * scale) / 2}px;`;
     box.innerHTML = sanitize(String(state.html || ''));
-    const view = box.querySelector('#term');
+    const view = box.querySelector('.term');
     if (view) view.scrollTop = view.scrollHeight; // Newest output, like on the hacker's screen
 }
 

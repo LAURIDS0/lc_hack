@@ -1,7 +1,9 @@
 // =====================================================================
 //  Keyboard
 // =====================================================================
-input.addEventListener('keydown', (e) => {
+// Keys in a terminal's input field. The terminal becomes the active one first.
+function onTermKey(t, e) {
+    useTerm(t);
     if (input.disabled) return; // The game is over, or a command is still running
     if (e.key === 'Enter') {
         const value = input.value;
@@ -36,12 +38,18 @@ input.addEventListener('keydown', (e) => {
         e.preventDefault();
         input.value = history[++historyIndex] || '';
     }
-});
+}
+
+// Connects a terminal's elements: typing, and clicking to focus it
+function attachTerm(t) {
+    t.input.addEventListener('keydown', (e) => onTermKey(t, e));
+    t.term.addEventListener('mousedown', () => useTerm(t));
+    t.term.addEventListener('click', () => t.input.focus());
+}
+attachTerm(mainTerm);
 
 // Escape closes the terminal (counts as giving up).
 document.addEventListener('keyup', (e) => {
     if (e.key === 'Escape') post('close');
 });
 
-// Clicking anywhere in the terminal focuses the input again.
-term.addEventListener('click', () => input.focus());
