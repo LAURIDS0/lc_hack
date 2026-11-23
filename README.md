@@ -6,7 +6,7 @@ Passwords never leave the server, and the server decides when a player wins.
 
 ## Documentation
 
-Open [`docs/index.html`](docs/index.html) in your browser.
+Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack): installation, every export and config field, and guides for creating hacks, websites and your own hack types.
 
 ## Features
 
@@ -92,7 +92,7 @@ exports.lc_hack:createTerminal({
 })
 ```
 
-See the documentation for every export and config field.
+See the [documentation](https://lc-development.com/docs/#/lc_hack) for every export and config field.
 
 ## License
 
