@@ -48,6 +48,16 @@
 ---@field onFail? fun(source: number, id: number | string)
 ---@field canUse? fun(source: number, id: number | string): boolean, string? Return false (and a message) to stop the player from using the terminal
 
+---@class LcHackDevice
+---@field id any Given back to connect, e.g. a network id
+---@field name string Shown by scan, and the machine's host unless connect sets one
+---@field distance number Meters from the player
+---@field locked? boolean Shown as locked by scan
+
+---@class LcHackDeviceType
+---@field scan fun(source: number): LcHackDevice[] The devices of this type the player can find right now
+---@field connect fun(source: number, id: any): LcHackMachine | string The machine to add (lc_hack gives it its IP), or why it can't connect
+
 ---@class LcHackGameOptions
 ---@field secret any The answer, never sent to the client
 ---@field data? table Sent to the client UI
@@ -57,6 +67,7 @@
 local session = require 'server.session'
 local terminal = require 'server.terminal'
 local game = require 'server.game'
+local laptop = require 'server.laptop'
 
 local api = setmetatable({}, {
     __newindex = function(self, index, value)
@@ -155,6 +166,33 @@ end
 function api.isHacking(source)
     return session.exists(source)
 end
+
+-- ---------------------------------------------------------------------
+--  The laptop
+-- ---------------------------------------------------------------------
+
+---Adds a device type to the laptop: its devices show up in "scan", and "connect" adds them to the hack.
+---Using the same name again replaces it. It is removed when your resource stops.
+---@param name string Shown in the TYPE column of scan, e.g. 'phone'
+---@param data LcHackDeviceType
+function api.registerDevice(name, data)
+    if type(name) ~= 'string' then typeError('name', 'string', type(name)) end
+    if type(data) ~= 'table' then typeError('data', 'table', type(data)) end
+    if not data.scan then typeError('data.scan', 'function', type(data.scan)) end
+    if not data.connect then typeError('data.connect', 'function', type(data.connect)) end
+    laptop.register(name, data, GetInvokingResource())
+end
+
+---Opens the player's laptop.
+---@param source number
+---@return boolean opened false if the player is already hacking
+function api.openLaptop(source)
+    if type(source) ~= 'number' then typeError('source', 'number', type(source)) end
+    return laptop.open(source)
+end
+
+-- ox_inventory: the laptop item calls this export (see README)
+api.useLaptop = laptop.useItem
 
 -- ---------------------------------------------------------------------
 --  Minigames

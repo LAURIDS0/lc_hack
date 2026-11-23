@@ -6,7 +6,7 @@ game 'gta5'
 -- Resource Information
 name 'lc_hack'
 author 'LC Development'
-version '1.7.0'
+version '1.8.0'
 repository 'https://github.com/LAURIDS0/lc_hack'
 description 'A fake Linux terminal and desktops hacking minigame with networks, firewalls and server-side passwords'
 

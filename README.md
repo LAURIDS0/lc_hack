@@ -19,6 +19,7 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
 - In-world screens (DUI) that show the hack to everyone nearby in real time.
 - A minigame core: other resources register their own minigames and get server-side checks, attempts and time limits.
 - A full Linux filesystem of around 400 files per machine (services, logs, projects, browser data), matching the machine's OS, with fake passwords to mislead players.
+- The player's own laptop (an item), with `scan` and `connect`: other resources add the devices it finds, like phones or vehicles.
 - Terminals in the world through ox_target, or ox_lib points when ox_target isn't running.
 - Exports built like ox_target, with LuaLS annotations.
 - Server-side password checks and win conditions.
@@ -27,6 +28,7 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
 
 - [ox_lib](https://github.com/overextended/ox_lib)
 - [ox_target](https://github.com/overextended/ox_target) (optional)
+- [ox_inventory](https://github.com/overextended/ox_inventory) (optional, for the laptop item)
 - OneSync
 
 ## Installation
@@ -45,7 +47,21 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
    ensure lc_hack
    ```
 
-3. Use `/hack` or `/hackterminal` as an admin (`group.admin`) to try the example.
+3. With ox_inventory, add the laptop to `ox_inventory/data/items.lua`:
+
+   ```lua
+   ['laptop'] = {
+       label = 'Laptop',
+       weight = 1500,
+       stack = false,
+       consume = 0,
+       server = { export = 'lc_hack.useLaptop' },
+   },
+   ```
+
+   Without ox_inventory, players open it with `/laptop` (see `laptop.command` in `config.lua`).
+
+4. Use `/hack` or `/hackterminal` as an admin (`group.admin`) to try the example.
 
 ## Testing in the browser
 
@@ -71,6 +87,33 @@ dns = {
 ```
 
 Players can then open `northbank.com` in the browser or with `curl`. They can also build websites in game: changes on these servers are checked and saved by the game server (`serverdata.json`) and everyone sees them. See the documentation for details.
+
+## The laptop
+
+The laptop is the player's own machine. It finds nothing by itself: other resources add device types, and their devices show up when the player runs `scan`. `connect <ID>` asks the device type for the machine, gives it an IP and adds it to the hack.
+
+```lua
+exports.lc_hack:registerDevice('phone', {
+    -- The devices this player can find right now
+    scan = function(source)
+        return { { id = 12, name = 'Phone-8c13', distance = 4.2, locked = false } }
+    end,
+
+    -- The machine to add, or a string with why it can't connect
+    connect = function(source, id)
+        return {
+            user = 'mobile',
+            rootPassword = '4821',
+            files = { ['~/Notes/pin.txt'] = 'PIN: 4821' },
+            onRoot = function(player)
+                -- reward the player
+            end,
+        }
+    end,
+})
+```
+
+[lc_phonehack](https://github.com/LAURIDS0/lc_phonehack) and [lc_keyclone](https://github.com/LAURIDS0/lc_keyclone) are complete examples. `exports.lc_hack:openLaptop(source)` opens the laptop from your own code.
 
 ## Usage
 
