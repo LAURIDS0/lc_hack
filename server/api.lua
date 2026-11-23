@@ -16,10 +16,11 @@
 ---@field rootPassword? string su/sudo
 ---@field ports? number[]
 ---@field firewall? LcHackFirewall
----@field desktop? 'ubuntu' | 'windows' | 'kali' | 'macos' | 'random'
+---@field desktop? 'ubuntu' | 'kali' | 'macos' | 'chromeos' | 'mint' | 'fedora' | 'random'
 ---@field processes? string[]
 ---@field files? table<string, string>
 ---@field locked? string[]
+---@field website? string | true Only for servers in config.lua: folder with a static website, or true for an empty one to build in game
 
 ---@class LcHackConfig : LcHackMachine
 ---@field target? string The IP the player needs root on

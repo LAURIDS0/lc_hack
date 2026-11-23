@@ -34,6 +34,17 @@ RegisterNUICallback('mirror', function(data, cb)
     cb('ok')
 end)
 
+-- The player changed files on an always-on server: the server checks and saves them
+RegisterNUICallback('serverFiles', function(data, cb)
+    if terminal.open then TriggerLatentServerEvent('lc_hack:serverFiles', 100000, data) end
+    cb('ok')
+end)
+
+-- Another player changed files on an always-on server
+RegisterNetEvent('lc_hack:serverFiles', function(ip, ops)
+    SendNUIMessage({ action = 'serverFiles', ip = ip, ops = ops })
+end)
+
 -- The server closes the terminal (stopHack)
 RegisterNetEvent('lc_hack:close', hide)
 

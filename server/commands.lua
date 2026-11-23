@@ -18,6 +18,7 @@ local example = {
     target = '192.168.1.5',     -- Root on db-server wins
     files = {
         ['~/Desktop/note.txt'] = 'The backup server is at 10.0.0.12. IT mailed me the login.',
+        ['~/Pictures/whiteboard.svg'] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#f4f4f0"/><rect x="110" y="60" width="180" height="170" fill="#ffe66d" transform="rotate(-4 200 145)"/><text x="200" y="120" font-family="Comic Sans MS, cursive" font-size="20" text-anchor="middle" transform="rotate(-4 200 145)">wifi: Office-5G</text><text x="200" y="160" font-family="Comic Sans MS, cursive" font-size="20" text-anchor="middle" transform="rotate(-4 200 145)">Pa55w0rd!</text></svg>', -- A decoy hint in a picture
         ['/var/mail/alex'] = 'From: it@company.com\nSubject: Backup access\n\nUser: backup\nPassword: Secure2026',
     },
 

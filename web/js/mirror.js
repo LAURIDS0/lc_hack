@@ -73,7 +73,7 @@ if (!MIRROR) {
 // =====================================================================
 
 const ALLOWED_TAGS = new Set(['DIV', 'SPAN', 'BUTTON', 'I', 'PRE', 'LABEL', 'INPUT', 'TEXTAREA']);
-const ALLOWED_ATTRIBUTES = new Set(['class', 'id', 'hidden', 'title', 'style', 'type', 'value', 'checked']);
+const ALLOWED_ATTRIBUTES = new Set(['class', 'id', 'hidden', 'title', 'style', 'type', 'value', 'checked', 'data-os']);
 
 // Keeps only the tags and attributes the terminal and desktops use. Everything else
 // (scripts, images, event handlers, url() in styles) is removed.

@@ -5,6 +5,7 @@
 --  game.lua      minigame core used by other resources
 --  api.lua       exports
 --  commands.lua  test commands
+--  servers.lua   always-on servers and DNS from config.lua
 -- =====================================================================
 
 require 'server.api'

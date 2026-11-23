@@ -10,6 +10,8 @@
 --  further than the terminal's keepDistance away.
 -- =====================================================================
 
+local servers = require 'server.servers'
+
 local session = {}
 local sessions = {} -- source -> the hack that is open right now
 local paused = {}   -- source -> { [terminal id] = paused hack }
@@ -80,6 +82,8 @@ function session.start(source, config, onDone, terminal)
     for _, m in ipairs(config.network or {}) do
         if m.ip then machines[#machines + 1] = m end
     end
+    -- The always-on servers from config.lua are part of every hack
+    for _, m in ipairs(servers.list) do machines[#machines + 1] = m end
 
     -- The target is the machine with the IP in config.target, otherwise the player's own
     local target = machines[1]
@@ -91,6 +95,7 @@ function session.start(source, config, onDone, terminal)
     local public = publicMachine(config, 1)
     public.network = {}
     for i = 2, #machines do public.network[i - 1] = publicMachine(machines[i], i) end
+    public.dns = servers.dns
     public.mirror = terminal and terminal.screen and true or nil -- Send the screen to nearby players
     public.terminal = terminal and terminal.id or nil           -- The client keeps its state per terminal
 
@@ -101,6 +106,7 @@ function session.start(source, config, onDone, terminal)
         onDone = onDone,
         terminal = terminal,
         public = public,
+        logins = {}, -- machine index -> { root = boolean }: where the player has logged in
     }
     TriggerClientEvent('lc_hack:open', source, public)
     return true
@@ -180,6 +186,10 @@ lib.callback.register('lc_hack:verify', function(source, data)
     local m = s.machines[tonumber(data.machine)]
     if not m then return { ok = false, attempts = s.attempts } end
 
+    local index = tonumber(data.machine)
+    -- Root only on a machine the player is logged in to (machine 1 is their own)
+    if data.kind == 'root' and index ~= 1 and not s.logins[index] then return { ok = false, attempts = s.attempts } end
+
     local value = tostring(data.value or '')
     local ok
     if data.kind == 'root' then
@@ -190,6 +200,9 @@ lib.callback.register('lc_hack:verify', function(source, data)
     end
 
     if ok then
+        s.logins[index] = s.logins[index] or { root = false }
+        if data.kind == 'root' then s.logins[index].root = true end
+
         -- Root on the target machine = win
         if data.kind == 'root' and m == s.target then
             session.finish(source, true)
@@ -204,6 +217,27 @@ lib.callback.register('lc_hack:verify', function(source, data)
         return { ok = false, lost = true }
     end
     return { ok = false, attempts = s.attempts }
+end)
+
+-- The player changed files on an always-on server (config.lua): save them for everyone.
+-- Only on a server they logged in to in this hack; servers.apply checks every path.
+RegisterNetEvent('lc_hack:serverFiles', function(data)
+    local source = source
+    local s = sessions[source]
+    if not s or type(data) ~= 'table' then return end
+    local index = tonumber(data.machine)
+    local m = index and s.machines[index]
+    local login = index and s.logins[index]
+    if not m or not login or not servers.isServer(m) then return end
+
+    local applied = servers.apply(m, data.ops, m.user, login.root)
+    if #applied == 0 then return end
+
+    -- Everyone else in a hack right now sees the change straight away
+    local ip = type(m.ip) == 'table' and m.ip[1] or m.ip
+    for player in pairs(sessions) do
+        if player ~= source then TriggerLatentClientEvent('lc_hack:serverFiles', player, 100000, ip, applied) end
+    end
 end)
 
 -- The player closed the window (Escape / exit on their own machine)
