@@ -15,7 +15,7 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
 - Firewalls that drop traffic, and machines on several networks the player has to hop through.
 - Several terminals at once, and live camera windows (`view <ip>`) for camera machines.
 - Graphical desktops (Ubuntu, Kali, macOS, ChromeOS, Linux Mint, Fedora or random) with a terminal, file manager, text editor, image viewer, web browser and system monitor that look like each OS. Files in `~/Desktop` show up on the desktop.
-- Always-on servers and DNS in `config.lua`, with static websites players can browse and build in game.
+- Always-on servers and DNS in `config.lua`, with static websites players can browse and build in game: 20 brand websites and a search engine are included.
 - In-world screens (DUI) that show the hack to everyone nearby in real time.
 - A minigame core: other resources register their own minigames and get server-side checks, attempts and time limits.
 - A full Linux filesystem of around 400 files per machine (services, logs, projects, browser data), matching the machine's OS, with fake passwords to mislead players.
@@ -87,6 +87,14 @@ dns = {
 ```
 
 Players can then open `northbank.com` in the browser or with `curl`. They can also build websites in game: changes on these servers are checked and saved by the game server (`serverdata.json`) and everyone sees them. See the documentation for details.
+
+`config.lua` comes with 20 websites for well-known Los Santos brands (Maze Bank, Fleeca, Burger Shot, Lifeinvader, Weazel News, Premium Deluxe Motorsport, LSPD, Pillbox Hill Medical Center, The Diamond Casino & Resort and more) in `websites/`, and Eyefind, a search engine at `eyefind.info`:
+
+```lua
+search = 'eyefind.info/search.html',
+```
+
+The browser starts on Eyefind and searches with it from the address bar. Pages can't run scripts, so the browser does the searching: a page with an element marked `data-search` gets the results for `?q=`, from every page on every website in `dns`, including the ones players built. See `websites/eyefind/search.html`.
 
 ## The laptop
 

@@ -117,6 +117,7 @@ function session.start(source, config, onDone, terminal)
     public.network = {}
     for i = 2, #machines do public.network[i - 1] = publicMachine(machines[i], i) end
     public.dns = servers.dns
+    public.search = servers.search -- The browser's search engine
     -- Commands from config.commands run on the server; the client only learns their names
     public.serverCommands = {}
     for name, fn in pairs(config.commands or {}) do
@@ -135,6 +136,7 @@ function session.start(source, config, onDone, terminal)
         logins = {}, -- machine index -> { root = boolean }: where the player has logged in
         commands = config.commands or {},
     }
+    -- shortcut: the always-on servers' websites (~200 KB) go with every hack; cache them on the client if opening hitches
     TriggerClientEvent('lc_hack:open', source, public)
     return true
 end

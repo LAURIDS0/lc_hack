@@ -203,9 +203,11 @@ end
 -- ---------- In FiveM: build once from config.lua when the resource starts ----------
 
 if LoadResourceFile then
-    servers.list, servers.dns = servers.build(require 'config', function(path)
+    local config = require 'config'
+    servers.list, servers.dns = servers.build(config, function(path)
         return LoadResourceFile(cache.resource, path)
     end)
+    servers.search = config.search
 
     -- Changes saved last time
     local saved = json.decode(LoadResourceFile(cache.resource, DATA_FILE) or '{}') or {}
