@@ -148,7 +148,7 @@ Object.assign(commands, {
         // Wrong username (or root): Linux still asks for a password, but the server says no.
         const needPrompt = m.hasPassword || user !== m.user;
         askPassword(`${user}@${host}'s password: `, needPrompt, value => verify(m, 'login', user, value, () => {
-            print('Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-91-generic x86_64)');
+            print(bannerOf(m));
             print('');
             print(`Last login: ${new Date().toDateString()} from ${r.src}`);
             login(m, user);

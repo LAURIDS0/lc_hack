@@ -31,4 +31,7 @@ const SERVICES = {
 };
 
 // Paths only root can read by default. "~" is the machine user's home directory.
-const DEFAULT_LOCKED = ['/root', '/etc/shadow', '/etc/sudoers', '/var/backups/shadow.bak', '~/.ssh/id_rsa'];
+const DEFAULT_LOCKED = [
+    '/root', '/etc/shadow', '/etc/gshadow', '/etc/sudoers', '/etc/sudoers.d', '/var/backups/shadow.bak', '~/.ssh/id_rsa',
+    '/etc/ssh/ssh_host_ed25519_key', '/etc/mysql/debian.cnf', '/var/lib/mysql', '/var/spool/cron/crontabs', '/var/log/auth.log',
+];

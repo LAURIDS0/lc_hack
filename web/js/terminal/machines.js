@@ -60,7 +60,7 @@ function buildMachine(cfg) {
 
     // Build the filesystem: default files first, then the machine's own files on top.
     const base = { cwd: [], home: ['home', m.user] };
-    const files = { ...defaultFiles(m.user, m.host, m.ips), ...cfg.files };
+    const files = { ...defaultFiles(m), ...cfg.files };
     for (const path in files) addPath(m.fs, resolve(path, base), path.endsWith('/'), files[path]);
     for (const path of [...DEFAULT_LOCKED, ...toList(cfg.locked)]) m.locked.add('/' + resolve(path, base).join('/'));
 

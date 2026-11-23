@@ -23,7 +23,8 @@ Object.assign(commands, {
     // "hostname -I" prints the machine's IPs
     hostname(args) { print(args.includes('-I') ? session.machine.ips.join(' ') : session.machine.host); },
     uname(args) {
-        print(args.includes('-a') ? `Linux ${session.machine.host} 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux` : 'Linux');
+        const family = osOf(session.machine).family;
+        print(args.includes('-a') ? unameOf(session.machine) : family === 'darwin' ? 'Darwin' : 'Linux');
     },
     date() { print(new Date().toString()); },
     history() { history.forEach((cmd, i) => print(`${String(i + 1).padStart(4)}  ${cmd}`)); },

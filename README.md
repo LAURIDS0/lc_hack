@@ -10,14 +10,14 @@ Read it on [lc-development.com/docs](https://lc-development.com/docs/#/lc_hack):
 
 ## Features
 
-- Realistic terminal with `ls`, `cd`, `cat`, `grep`, `find`, `ps`, `strings`, `base64`, tab completion and history.
+- Realistic terminal with `ls`, `cd`, `cat`, `grep -r`, `find`, `tree`, `cp`, `sort`, `ps`, `strings`, `base64`, tab completion and history.
 - Networks with several machines: `ping`, `nmap`, `ssh`, `rdp`, `curl`, `ifconfig`, `arp`.
 - Firewalls that drop traffic, and machines on several networks the player has to hop through.
 - Graphical desktops (Ubuntu, Kali, macOS, ChromeOS, Linux Mint, Fedora or random) with a terminal, file manager, text editor, image viewer, web browser and system monitor that look like each OS. Files in `~/Desktop` show up on the desktop.
 - Always-on servers and DNS in `config.lua`, with static websites players can browse and build in game.
 - In-world screens (DUI) that show the hack to everyone nearby in real time.
 - A minigame core: other resources register their own minigames and get server-side checks, attempts and time limits.
-- Around 90 default Linux files per machine, including fake passwords to mislead players.
+- A full Linux filesystem of around 400 files per machine (services, logs, projects, browser data), matching the machine's OS, with fake passwords to mislead players.
 - Terminals in the world through ox_target, or ox_lib points when ox_target isn't running.
 - Exports built like ox_target, with LuaLS annotations.
 - Server-side password checks and win conditions.

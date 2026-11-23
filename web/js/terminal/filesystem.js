@@ -139,10 +139,19 @@ function removeFile(path, recursive) {
 
 // Moves a file or directory, like "mv". Into "to" when it is a directory.
 // Returns an error text, or null on success. Used by "mv" and drag and drop on the desktop.
+// Does a folder have a locked file or folder in it? Locks are by path, so moving or
+// copying it would leave the locked file readable at its new path.
+function containsLocked(path, node) {
+    if (session.root || !isDir(node)) return false;
+    const prefix = '/' + path.join('/') + '/';
+    for (const locked of session.machine.locked) if (locked.startsWith(prefix)) return true;
+    return false;
+}
+
 function moveFile(from, to) {
     const node = getNode(from);
     if (node === undefined) return 'No such file or directory';
-    if (node === null || !from.length || !canWrite(from)) return 'Permission denied';
+    if (node === null || !from.length || !canWrite(from) || containsLocked(from, node)) return 'Permission denied';
     const dest = isDir(getNode(to)) ? [...to, from[from.length - 1]] : to;
     const fromStr = '/' + from.join('/');
     const destStr = '/' + dest.join('/');
@@ -159,6 +168,36 @@ function moveFile(from, to) {
     syncFiles([{ op: 'delete', path: fromStr }, ...treeOps(dest, node)]);
     fsChanged();
     return null;
+}
+
+// Copies a file, or a folder when recursive ("cp -r"). Into "to" when it is a directory.
+// Returns an error text, or null on success.
+function copyFile(from, to, recursive) {
+    const node = getNode(from);
+    if (node === undefined) return 'No such file or directory';
+    if (node === null || containsLocked(from, node)) return 'Permission denied';
+    if (isDir(node) && !recursive) return 'Is a directory (use -r)';
+    const dest = isDir(getNode(to)) ? [...to, from[from.length - 1]] : to;
+    if (('/' + dest.join('/') + '/').startsWith('/' + from.join('/') + '/')) return 'Invalid argument'; // Into itself
+    const parent = getNode(dest.slice(0, -1));
+    if (parent === null) return 'Permission denied';
+    if (!isDir(parent) || !dest.length) return 'No such file or directory';
+    const name = dest[dest.length - 1];
+    if (has(parent, name) && isDir(parent[name]) !== isDir(node)) return isDir(node) ? 'Not a directory' : 'Is a directory';
+    if (isLocked(dest) || !canWrite(dest)) return 'Permission denied';
+    const copy = isDir(node) ? JSON.parse(JSON.stringify(node)) : node;
+    parent[name] = copy;
+    syncFiles(treeOps(dest, copy));
+    fsChanged();
+    return null;
+}
+
+// The size of a file or folder in bytes (a folder is 4096 plus everything in it)
+function sizeOf(node) {
+    if (!isDir(node)) return node.length;
+    let size = 4096;
+    for (const name of Object.keys(node)) size += sizeOf(node[name]);
+    return size;
 }
 
 // Something on a filesystem changed: redraw the desktop icons and open file windows.
